@@ -161,12 +161,28 @@ pub fn decompress_swf<'a, R: Read + 'a>(mut input: R) -> Result<SwfBuf> {
         tag = reader.read_tag();
     }
 
+    // Parse existing tags until we find the DefineSceneAndFrameLabelData tag.
+    let mut frame_list = Vec::new();
+    loop {
+        if let Ok(Tag::DefineSceneAndFrameLabelData(frame_label_data)) = tag {
+            frame_list = frame_label_data.scenes.into_iter()
+            .map(|scene| (scene.frame_num as i32, scene.label.to_string_lossy(encoding_rs::UTF_8)))
+            .collect();
+            break;
+        }
+        if matches!(tag, Ok(Tag::End)) || tag.is_err() {
+            break;
+        }
+        tag = reader.read_tag();
+    }
+
     Ok(SwfBuf {
         header: HeaderExt {
             header,
             file_attributes,
             background_color,
             uncompressed_len: uncompressed_len as i32,
+            frame_list,
         },
         data,
     })

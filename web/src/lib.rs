@@ -229,6 +229,7 @@ struct MovieMetadata {
     is_action_script_3: bool,
     #[serde(rename = "uncompressedLength")]
     uncompressed_len: i32,
+    frame_list: Vec<(i32, String)>,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -1227,6 +1228,7 @@ impl RuffleHandle {
                 swf_version: swf_header.version(),
                 background_color,
                 is_action_script_3: swf_header.is_action_script_3(),
+                frame_list: swf_header.frame_list().to_vec(),
             };
 
             if let Ok(value) = serde_wasm_bindgen::to_value(&metadata) {

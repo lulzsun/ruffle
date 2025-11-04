@@ -100,6 +100,7 @@ pub struct HeaderExt {
     pub(crate) file_attributes: FileAttributes,
     pub(crate) background_color: Option<SetBackgroundColor>,
     pub(crate) uncompressed_len: i32,
+    pub(crate) frame_list: Vec<(i32, String)>,
 }
 
 impl HeaderExt {
@@ -111,6 +112,7 @@ impl HeaderExt {
             file_attributes: Default::default(),
             background_color: None,
             uncompressed_len: 0,
+            frame_list: Vec::new(),
         }
     }
 
@@ -122,6 +124,7 @@ impl HeaderExt {
             file_attributes: Default::default(),
             background_color: None,
             uncompressed_len: -1,
+            frame_list: Vec::new(),
         }
     }
 
@@ -139,6 +142,7 @@ impl HeaderExt {
             file_attributes: Default::default(),
             background_color: None,
             uncompressed_len: length,
+            frame_list: Vec::new(),
         }
     }
 
@@ -226,6 +230,12 @@ impl HeaderExt {
     pub fn use_network_sandbox(&self) -> bool {
         self.file_attributes
             .contains(FileAttributes::USE_NETWORK_SANDBOX)
+    }
+
+    /// The list of frames paired by frame number and frame label.
+    #[inline]
+    pub fn frame_list(&self) -> &Vec<(i32, String)> {
+        &self.frame_list
     }
 }
 
