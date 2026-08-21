@@ -21,6 +21,7 @@ members = [
     "render/naga-agal",
     "render/pixel_bender",
     "render/pixel_bender/assembly_tests",
+    "render/stream",
     "render/wgpu",
     "render/webgl",
 

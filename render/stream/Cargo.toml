@@ -1,0 +1,25 @@
+[package]
+name = "ruffle_render_stream"
+description = "Ruffle render backend that emits a draw-command stream instead of rasterizing"
+authors.workspace = true
+edition.workspace = true
+homepage.workspace = true
+license.workspace = true
+repository.workspace = true
+version.workspace = true
+publish = false
+
+[lints]
+workspace = true
+
+[features]
+# Emit the command stream to a JavaScript host.
+web = ["dep:wasm-bindgen", "dep:js-sys"]
+
+[dependencies]
+wasm-bindgen = { workspace = true, optional = true }
+js-sys = { workspace = true, optional = true }
+log = { workspace = true }
+tracing = { workspace = true }
+ruffle_render = { path = "..", features = ["web", "tessellator"] }
+swf = { path = "../../swf" }
