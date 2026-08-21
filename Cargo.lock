@@ -5104,6 +5104,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "ruffle_render_stream"
+version = "0.7.1"
+dependencies = [
+ "js-sys",
+ "log",
+ "ruffle_render",
+ "swf 0.3.0",
+ "tracing",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "ruffle_render_webgl"
 version = "0.7.1"
 dependencies = [
@@ -5271,6 +5283,7 @@ dependencies = [
  "ruffle_core",
  "ruffle_render",
  "ruffle_render_canvas",
+ "ruffle_render_stream",
  "ruffle_render_webgl",
  "ruffle_render_wgpu",
  "ruffle_video_external",

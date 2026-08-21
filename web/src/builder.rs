@@ -498,22 +498,27 @@ impl RuffleInstanceBuilder {
     }
 
     #[allow(clippy::unused_async)]
+    /// `js_player` is only needed by the command-stream backend, which hands
+    /// its output to a `whirledStream` function the host attaches there.
     pub async fn create_renderer(
         &self,
+        js_player: &JavascriptPlayer,
     ) -> Result<(Box<dyn RenderBackend>, HtmlCanvasElement), Box<dyn Error>> {
+        let _ = js_player;
         let window = web_sys::window().ok_or("Expected window")?;
         let document = window.document().ok_or("Expected document")?;
         #[cfg(not(any(
             feature = "canvas",
             feature = "webgl",
             feature = "webgpu",
-            feature = "wgpu-webgl"
+            feature = "wgpu-webgl",
+            feature = "three"
         )))]
         std::compile_error!("You must enable one of the render backend features (e.g., webgl).");
 
         let is_transparent = self.wmode.as_deref() == Some("transparent");
 
-        let mut renderer_list = vec!["wgpu-webgl", "webgpu", "webgl", "canvas"];
+        let mut renderer_list = vec!["wgpu-webgl", "webgpu", "webgl", "canvas", "three"];
         if let Some(preferred_renderer) = &self.preferred_renderer {
             if let Some(pos) = renderer_list.iter().position(|&r| r == preferred_renderer) {
                 renderer_list.remove(pos);
@@ -620,6 +625,25 @@ impl RuffleInstanceBuilder {
                         Err(error) => tracing::error!("Error creating canvas renderer: {}", error),
                     }
                 }
+                #[cfg(feature = "three")]
+                "three" => {
+                    tracing::info!("Creating command-stream (three) renderer...");
+                    // This backend rasterizes nothing, so it has no use for a
+                    // canvas. `create_renderer` must return one regardless, so
+                    // hand back an unattached 1x1 element that nothing draws
+                    // to. See docs/specs/swf-avatar-rendering.md (W2).
+                    let canvas: HtmlCanvasElement = document
+                        .create_element("canvas")
+                        .into_js_result()?
+                        .dyn_into()
+                        .map_err(|_| "Expected HtmlCanvasElement")?;
+                    let sink = ruffle_render_stream::JsCommandSink::new(
+                        JsValue::from(js_player.clone()),
+                    );
+                    let renderer =
+                        ruffle_render_stream::StreamRenderBackend::new(Box::new(sink));
+                    return Ok((Box::new(renderer), canvas));
+                }
                 _ => {}
             }
         }
@@ -672,7 +696,7 @@ impl RuffleInstanceBuilder {
     ) -> Result<BuiltPlayer, Box<dyn Error>> {
         let window = web_sys::window().ok_or("Expected window")?;
 
-        let (renderer, canvas) = self.create_renderer().await?;
+        let (renderer, canvas) = self.create_renderer(&js_player).await?;
 
         let mut builder = PlayerBuilder::new()
             .with_boxed_renderer(renderer)
